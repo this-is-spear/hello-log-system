@@ -91,7 +91,6 @@ logging:
 ```
 
 해당 방식은 세팅 시작은 쉽지만 커스텀은 데코레이터 패턴을 활용해야 한다.
-/org/springframework/boot/logging/logback/structured-file-appender.xml 파일을 참고해야 한다.
 append name 이 FILE 을 레퍼런스로 사용하면 된다.
 
 ```xml
@@ -99,6 +98,8 @@ append name 이 FILE 을 레퍼런스로 사용하면 된다.
     <appender-ref ref="FILE" />
 </appender>
 ```
+
+> `/org/springframework/boot/logging/logback/structured-file-appender.xml` 파일을 참고해야 한다.
 
 ### 3.4.0 버전 이하
 
