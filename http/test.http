@@ -1,0 +1,7 @@
+### GET HELLO
+
+GET http://localhost:8080/hello
+
+### GET ERROR
+
+GET http://localhost:8080/error

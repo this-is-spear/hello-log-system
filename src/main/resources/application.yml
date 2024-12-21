@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: hello-log-system
+    version: 1.0.0-SNAPSHOT
+
+logging:
+#  structured:
+#    format:
+#      file: logstash
+#    ecs:
+#      service:
+#        # ???? ??? application.name ?? ???
+#        # name: hello-spring-log
+#        # ???? ??? application.version ?? ???
+#        # version: 1.0.0
+#        environment: dev
+#        node-name: localhost
+  logback:
+    rollingpolicy:
+      file-name-pattern: ./logs/${LOG_FILE}.%d{yyyy-MM-dd-HH-mm}.%i.log
+      max-file-size: 10MB
+      total-size-cap: 1GB
+      max-history: 200
+  file:
+    name: app.log
