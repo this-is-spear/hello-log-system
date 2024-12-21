@@ -2,6 +2,7 @@
 
 ## 1. Spring Boot Logging
 
+
 ## 2. Setting up logback
 
 logback 설정 방식은 logback-spring.xml 파일, logback.properties 사용하는 방법이 있다.
@@ -11,6 +12,35 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - 로거 설정
 - 어펜더 설정
 - 인코더 설정
+
+### Appender
+
+
+- 어펜더 구조 정리
+- 커스텀한 어펜더
+	- [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
+- 사용해볼법한 어펜더
+	- [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
+	- [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
+	- [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
+- 원리가 궁금한 어펜더
+	- [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+	- [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
+- 성능 확인하고 싶은 어펜더
+	- [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+- 커스텀한 어펜더 - s3 어펜더 만들어보자.
+	- [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
+
+
+### RollingFileAppender
+
+No buffer
+
+![image](https://github.com/user-attachments/assets/a5603678-7626-440a-b514-664d9585f2e2)
+
+With buffer
+
+![image](https://github.com/user-attachments/assets/c0bdc2fc-5858-4407-93b5-ae3fa7c58e07)
 
 
 ## 3. Setting up log structure with logstash
