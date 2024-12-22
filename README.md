@@ -16,33 +16,32 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 
 ### Appender
 
-
-- 어펜더 구조 정리
-- 커스텀한 어펜더
-	- [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
-- 사용해볼법한 어펜더
-	- [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
-	- [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
-	- [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
-- 원리가 궁금한 어펜더
-	- [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
-	- [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
-- 성능 확인하고 싶은 어펜더
-	- [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
-- 커스텀한 어펜더 - s3 어펜더 만들어보자.
-	- [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
+- [ ] 어펜더 구조 정리
+- [ ] 커스텀한 어펜더
+	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
+- [ ] 사용해볼법한 어펜더
+    - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
+	- [ ] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
+	- [ ] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
+- [ ] 원리가 궁금한 어펜더
+	- [ ] [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+	- [ ] [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
+- [ ] 성능 확인하고 싶은 어펜더
+	- [ ] [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+- [ ] 커스텀한 어펜더 - s3 어펜더 만들어보자.
+	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 
 ### FileAppender
 
-OutputStreamAppender 하위 클래스로 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
+OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
 
 | Property Name	 | Type	    | Description                                                                               |
 |----------------|----------|-------------------------------------------------------------------------------------------|
 | append	        | boolean	 | 기존 파일 끝에 추가할지 결정한다. true 면 파일 끝에 추가하고 그렇지 않다면 삭제한다. 기본 값은 true 다.                         |
-| encoder	       | Encoder	 | 이벤트가 기록되는 방식을 정한다.                                                                        |
+| encoder	       | Encoder	 | 로킹 이벤트가 기록되는 방식을 정한다.                                                                     |
 | file	          | String	  | 작성할 파일 이름을 정한다. 파일 부모 디렉토리가 없는 경우 자동으로 생성한다.                                              |
 | bufferSize	    | FileSize | immediateFlush 옵션이 false 로 설정된 경우 출력 버퍼 크기 설정한다. 기본 값은 8KB이다. 아무리 부담스러운 작업이어도 256KB 충분하다. |
-| prudent        | boolean  | 한 파일을 여러 FileAppender 가 사용하는 경우 해당 파일에 신중하게 작성할지 결정합니다.                                   |
+| prudent        | boolean  | 한 파일을 여러 FileAppender 가 사용하는 경우 해당 파일에 신중하게 작성할지 결정한다.                                    |
 
 > FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
 
@@ -77,6 +76,46 @@ With buffer
 ```
 
 ### RollingFileAppender
+
+RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅 이벤트를 적재한다.
+롤오버하는 방식은 두 가지 중 하나로 설정한다.
+
+- RollingPolicy : 롤링이 발생할 상황을 지시한다.
+- TriggeringPolicy : 롤링이 발생할 시점을 지시한다.
+
+기본적인 FileAppender 설정 방식을 따르며 추가적인 설정은 다음과 같다.
+
+| Property Name	 | Type	          | Description             |
+|----------------|----------------|-------------------------|
+| rollingPolicy	 | RollingPolicy	 | 롤오버가 발생할 상황을 지시하는 방법이다. |
+
+정책은 다음과 같다.
+
+- RollingPolicy
+  - TimeBasedRollingPolicy : 날짜별로 파일을 보관한다.
+  - SizeAndTimeBasedRollingPolicy : 날짜별로 파일을 보관함과 동시에 파일 크기를 제한한다. 크기를 넘으면 해당 날짜에서 넘버링해 파일을 관리한다.
+  - FixedWindowRollingPolicy : 더이상 사용하지 않는다.
+- TriggeringPolicy
+  - SizeBasedTriggeringPolicy : 파일 크기가 지정한 크기를 넘으면 롤링한다.
+
+
+TimeBasedRollingPolicy
+
+| Property Name	       | Type	    | Description |
+|----------------------|----------|-------------|
+| fileNamePattern	     | String	  |             |
+| maxHistory	          | int	     |             |
+| totalSizeCap	        | int	     |             |
+| cleanHistoryOnStart	 | boolean	 |             |
+
+> /wombat/foo.%d.gz 형식으로 명명하면 파일을 압축(Automatic file compression)해서 관리할 수 있다.
+
+SizeAndTimeBasedRollingPolicy
+
+
+| Property Name	 | Type	     | Description |
+|----------------|-----------|-------------|
+| maxFileSize	   | FileSize	 |             |
 
 
 
