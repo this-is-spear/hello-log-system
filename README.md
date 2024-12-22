@@ -98,26 +98,31 @@ RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅
 - TriggeringPolicy
   - SizeBasedTriggeringPolicy : 파일 크기가 지정한 크기를 넘으면 롤링한다.
 
+자주 사용되는 SizeAndTimeBasedRollingPolicy, SizeAndTimeBasedRollingPolicy 정책만 확인해보겠다.
 
-TimeBasedRollingPolicy
+#### TimeBasedRollingPolicy
 
-| Property Name	       | Type	    | Description |
-|----------------------|----------|-------------|
-| fileNamePattern	     | String	  |             |
-| maxHistory	          | int	     |             |
-| totalSizeCap	        | int	     |             |
-| cleanHistoryOnStart	 | boolean	 |             |
+| Property Name	       | Type	    | Description                                                                      |
+|----------------------|----------|----------------------------------------------------------------------------------|
+| fileNamePattern	     | String	  | 롤오버될 파일 이름을 정의하며 날짜 패턴이 생력되면 기본 패턴(yyyy-MM-dd)이 추가된다. 롤오버 기간은 패턴에서 유추한다.         |
+| maxHistory	          | int	     | 보관할 로그 파일 수를 지정한다. 최대 보관 수를 넘으면 오래된 로그부터 비동기적으로 삭제한다. 0으로 설정하면 비활성화되며 기본 값은 0이다. |
+| totalSizeCap	        | int	     | 보관한 로그 크기를 지정한다. 총 크기를 초과하면 오래된 로그부터 비동기적으로 삭제한다. 0으로 설정하면 비활성화되며 기본 값은 0이다.     |
+| cleanHistoryOnStart	 | boolean	 | true로 설졍하면 appender 시작하면서 아카이브된 로그를 삭제한다.                                        |
+
+> 팁 : TimeBasedRollingPolicy 에서 로그가 간혹 보이지 않는 경우는 아직 롤오버가 진행되지 않은 경우다. 롤오버 트리거는 서비스가 로깅 이벤트를 적재할 때 발생한다.
+
+> 유추할 때 다중으로 쓰면 기본 지정자를 찾을 수 없기에 `%d{yyyy/MM, aux}` 방식처럼 보조 라고 지정해야 한다. 시간대를 지정하고 싶다면 `%d {yyyy-MM-dd-HH, UTC }` 처럼 지정하면 된다.
 
 > /wombat/foo.%d.gz 형식으로 명명하면 파일을 압축(Automatic file compression)해서 관리할 수 있다.
 
-SizeAndTimeBasedRollingPolicy
+#### SizeAndTimeBasedRollingPolicy
 
+기본적인 TimeBasedRollingPolicy 설정 방식을 따르며 추가적인 설정은 다음과 같다.
 
-| Property Name	 | Type	     | Description |
-|----------------|-----------|-------------|
-| maxFileSize	   | FileSize	 |             |
-
-
+| Property Name	   | Type	     | Description                                                                       |
+|------------------|-----------|-----------------------------------------------------------------------------------|
+| fileNamePattern	 | String	   | TimeBasedRollingPolicy 정책과 유사하지만 형식에 `%i` 가 꼭 포함되어야 한다. 크기가 넘어가면 해당 위치에 숫자가 증가한다. |
+| maxFileSize	     | FileSize	 | 설정된 크기가 넘어가면 0부터 시작하여 증가하는 인덱스로 보관된다. `%i` 형식에 해당 인덱스가 설정된다.                      |
 
 ## 3. Setting up log structure with logstash
 
