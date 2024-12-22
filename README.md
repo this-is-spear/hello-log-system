@@ -9,6 +9,7 @@ logback 설정 방식은 logback-spring.xml 파일, logback.properties 사용하
 spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 
 - 프로퍼티 설정 -> 환경 변수, 스프링 변수
+- 이벤트란
 - 로거 설정
 - 어펜더 설정
 - 인코더 설정
@@ -31,8 +32,19 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - 커스텀한 어펜더 - s3 어펜더 만들어보자.
 	- [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 
+### FileAppender
 
-### RollingFileAppender
+OutputStreamAppender 하위 클래스로 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
+
+| Property Name	 | Type	    | Description                                                                               |
+|----------------|----------|-------------------------------------------------------------------------------------------|
+| append	        | boolean	 | 기존 파일 끝에 추가할지 결정한다. true 면 파일 끝에 추가하고 그렇지 않다면 삭제한다. 기본 값은 true 다.                         |
+| encoder	       | Encoder	 | 이벤트가 기록되는 방식을 정한다.                                                                        |
+| file	          | String	  | 작성할 파일 이름을 정한다. 파일 부모 디렉토리가 없는 경우 자동으로 생성한다.                                              |
+| bufferSize	    | FileSize | immediateFlush 옵션이 false 로 설정된 경우 출력 버퍼 크기 설정한다. 기본 값은 8KB이다. 아무리 부담스러운 작업이어도 256KB 충분하다. |
+| prudent        | boolean  | 한 파일을 여러 FileAppender 가 사용하는 경우 해당 파일에 신중하게 작성할지 결정합니다.                                   |
+
+> FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
 
 No buffer
 
@@ -41,6 +53,31 @@ No buffer
 With buffer
 
 ![image](https://github.com/user-attachments/assets/c0bdc2fc-5858-4407-93b5-ae3fa7c58e07)
+
+> prudent 모드는 배타적 잠금을 활용해 직렬화하며 대략 로그 작성 비용이 3배 증가한다. NFS(네트워크 파일 시스템)에서는 더 많은 비용이 발생한다. 잠금 편향이 발생하고 기아 현상이 발생한다.
+> prudent 모드는 네트워크 속도와 OS 구현 세부 정보에 성능이 좌우하는데 [FileLockSimulator](https://gist.github.com/ceki/2794241) 로 시뮬레이션 가능하다. 
+
+> 팁 : 배치 애플리케이션을 개발하거나 단기 애플리케이션인 경우 시작마다 새 로그 파일을 만드는게 좋다. 파일에 실행한 날짜를 추가하면 된다. (참고 자료 : [Uniquely named files](https://logback.qos.ch/manual/appenders.html#uniquelyNamed))
+
+```xml
+<configuration>
+  <!-- Insert the current time formatted as "yyyyMMdd'T'HHmmss" under
+       the key "bySecond" into the logger context. This value will be
+       available to all subsequent configuration elements. -->
+  <timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/>
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <!-- use the previously created timestamp to create a uniquely
+         named log file -->
+    <file>log-${bySecond}.log</file>
+    <!--... -->
+  </appender>
+<!--... -->
+ </configuration>
+```
+
+### RollingFileAppender
+
 
 
 ## 3. Setting up log structure with logstash
