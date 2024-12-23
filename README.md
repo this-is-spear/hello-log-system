@@ -20,7 +20,7 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 커스텀한 어펜더
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 - [ ] 사용해볼법한 어펜더
-        - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
+	- [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
 	- [X] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
 	- [ ] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
 - [ ] 원리가 궁금한 어펜더
