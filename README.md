@@ -20,8 +20,8 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 커스텀한 어펜더
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 - [ ] 사용해볼법한 어펜더
-    - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
-	- [ ] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
+        - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
+	- [X] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
 	- [ ] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
 - [ ] 원리가 궁금한 어펜더
 	- [ ] [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
@@ -118,7 +118,7 @@ JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하�
 
 JaninoEventEvaluator 사용하려면 build.gradle.kts 에 다음 라이브러리를 추가해야 한다.
 
-> spring boot 에서 [org.codehaus.janino:commons-compiler:3.1.12](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html) 라이브러리가 포함돼야 하는데 포함되지 않았나보다.
+> [spring boot coordinates](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html) 에서 [org.codehaus.janino:commons-compiler:3.1.12](https://janino-compiler.github.io/janino/) 라이브러리가 포함돼야 하는데 포함되지 않았나보다.
 > 어떤 이유에선지 라이브러리를 직접 설정해야 한다.
 
 ```
