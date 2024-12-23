@@ -31,6 +31,130 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 커스텀한 어펜더 - s3 어펜더 만들어보자.
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 
+### SMTP Appender
+
+
+### SMTP Appender - Marker based triggering
+
+ERROR 레벨 중 일부 이벤트 만 메일을 받을 수 있도록 마커 설정이 가능하다.
+
+```kotlin
+@RestControllerAdvice
+class HelloExceptionHandler {
+    private val log = LoggerFactory.getLogger(HelloExceptionHandler::class.java)
+    @ExceptionHandler(RuntimeException::class)
+    fun handleException(e: RuntimeException): String {
+        val notifyAdmin = MarkerFactory.getMarker("NOTIFY_ADMIN")
+        log.warn(notifyAdmin, "An exception occurred {}", e.message)
+        return "Error: ${e.message}"
+    }
+}
+```
+
+logback-spring.xml 파일에는 OnMarkerEvaluator 에 마커를 등록한다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>NOTIFY_ADMIN</marker>
+        </evaluator>
+        <smtpHost>smtp-relay.gmail.com</smtpHost>
+        <from>geonc123@estsoft.com</from>
+        <to>geonc123@estsoft.com</to>
+        <subject>TESTING: %logger{20} - %m</subject>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="EMAIL" />
+    </root>
+</configuration>
+
+```
+
+
+발생한 예외 수집한 모습이다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 27 43" src="https://github.com/user-attachments/assets/cc511049-6e64-471f-a550-c28eca14a005" />
+
+근처 로그를 수집해서 전달한다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 19 46" src="https://github.com/user-attachments/assets/9ea189a9-248f-4664-a1be-5cb044119ffc" />
+
+DEBUG 수준부터 수집한다면 경우 다음처럼 출력한다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 26 44" src="https://github.com/user-attachments/assets/7d80c864-f114-4174-bd1c-68c87c44f771" />
+
+
+JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하면 전송한다.
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>NOTIFY_ADMIN</marker>
+            <expression>markerList.contains("NOTIFY_ADMIN")||markerList.contains("TRANSACTION_ADMIN")</expression>
+        </evaluator>
+        <smtpHost>smtp-relay.gmail.com</smtpHost>
+        <from>geonc123@estsoft.com</from>
+        <to>geonc123@estsoft.com</to>
+<!--        <to>ANOTHER_EMAIL_DESTINATION</to> &lt;!&ndash; additional destinations are possible &ndash;&gt;-->
+        <subject>TESTING: %logger{20} - %m</subject>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout"/>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="EMAIL" />
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
+
+```
+
+JaninoEventEvaluator 사용하려면 build.gradle.kts 에 다음 라이브러리를 추가해야 한다.
+
+> spring boot 에서 [org.codehaus.janino:commons-compiler:3.1.12](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html) 라이브러리가 포함돼야 하는데 포함되지 않았나보다.
+> 어떤 이유에선지 라이브러리를 직접 설정해야 한다.
+
+```
+dependencies {
+	implementation("org.codehaus.janino:janino:3.1.12")
+}
+```
+
+아래와 같은 경우 예시다.
+
+```kotlin
+@RestControllerAdvice
+class HelloExceptionHandler {
+    private val log = LoggerFactory.getLogger(HelloExceptionHandler::class.java)
+    @ExceptionHandler(RuntimeException::class)
+    fun handleException(e: RuntimeException): String {
+        val notifyAdmin: Marker = MarkerFactory.getMarker("NOTIFY_ADMIN")
+        val transactionAdmin: Marker = MarkerFactory.getMarker("TRANSACTION_ADMIN")
+        log.warn(notifyAdmin, "An exception occurred {}", e.message)
+        log.warn(transactionAdmin, "An exception occurred {}", e.message)
+        return "Error: ${e.message}"
+    }
+}
+```
+
+NOTIFY_ADMIN, TRANSACTION_ADMIN 마커에 의해 두 번 메일 전송이 올 줄 알았지만 한 번만 전송됐다. NOTIFY_ADMIN 에 의해 메일이 전송된다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 2 21 08" src="https://github.com/user-attachments/assets/126cef44-4f4b-4148-87a3-3b35c95a426d" />
+
+느꼈던 점은 mail 보내기전 위치가 존재하고 그 이후 로그를 전송한다는 점이다. 
+누군가 로그 전송한 인덱스를 저장하고 있고 이후 로그를 차례대로 출력한다.
+
 ### FileAppender
 
 OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
