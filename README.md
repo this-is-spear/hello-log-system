@@ -31,9 +31,6 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 커스텀한 어펜더 - s3 어펜더 만들어보자.
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 
-### SMTP Appender
-
-
 ### SMTP Appender - Marker based triggering
 
 ERROR 레벨 중 일부 이벤트 만 메일을 받을 수 있도록 마커 설정이 가능하다.
@@ -74,15 +71,9 @@ logback-spring.xml 파일에는 OnMarkerEvaluator 에 마커를 등록한다.
 
 ```
 
-
 발생한 예외 수집한 모습이다.
 
 <img width="1300" alt="스크린샷 2024-12-23 오후 1 27 43" src="https://github.com/user-attachments/assets/cc511049-6e64-471f-a550-c28eca14a005" />
-
-느꼈던 점은 mail 보내기전 위치가 존재하고 그 이후 로그를 전송한다는 점이다. 
-누군가 로그 전송한 인덱스를 저장하고 있고 이후 로그를 차례대로 출력한다.
-
-<img width="1300" alt="스크린샷 2024-12-23 오후 1 19 46" src="https://github.com/user-attachments/assets/9ea189a9-248f-4664-a1be-5cb044119ffc" />
 
 JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하면 전송한다.
 
@@ -143,6 +134,15 @@ class HelloExceptionHandler {
     }
 }
 ```
+
+SMTP Appender 는 버퍼 관리가 중요하다.
+버퍼에 담긴 데이터가 전부 전송되기 때문이다.
+다음처럼 버퍼에 저장된 로그를 차례대로 출력한다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 19 46" src="https://github.com/user-attachments/assets/9ea189a9-248f-4664-a1be-5cb044119ffc" />
+
+[버퍼가 가득 찰까봐 걱정할 수 있는데 걱정하지 않아도 된다.](https://logback.qos.ch/manual/appenders.html#bufferManagement)
+버퍼를 넘는 순간 오래된 버퍼를 삭제한다. 또한 지난 30분 간 업데이트 되지 않은 버퍼도 자동으로 삭제한다.
 
 ### FileAppender
 
