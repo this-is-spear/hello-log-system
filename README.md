@@ -213,7 +213,7 @@ logging_event_exception 에 포함되는 데이터와 예시는 다음과 같다
 | 45 | 6 | at kotlin.reflect.jvm.internal.KCallableImpl.callDefaultMethod$kotlin\_reflection\(KCallableImpl.kt:207\) |
 | 45 | 7 | at kotlin.reflect.jvm.internal.KCallableImpl.callBy\(KCallableImpl.kt:112\) |
 
-event_id 에 맞게 root log 를 찾도록 설계됐다. 
+event_id 에 맞게 root log 를 찾도록 설계됐다. 
 
 | timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
