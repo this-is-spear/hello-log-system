@@ -84,7 +84,7 @@ logback-spring.xml 파일에는 OnMarkerEvaluator 에 마커를 등록한다.
 
 JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하면 전송한다.
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
     <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
@@ -100,18 +100,10 @@ JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하�
         <layout class="ch.qos.logback.classic.html.HTMLLayout"/>
     </appender>
 
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
     <root level="INFO">
         <appender-ref ref="EMAIL" />
-        <appender-ref ref="STDOUT" />
     </root>
 </configuration>
-
 ```
 
 JaninoEventEvaluator 사용하려면 build.gradle.kts 에 다음 라이브러리를 추가해야 한다.
@@ -122,23 +114,6 @@ JaninoEventEvaluator 사용하려면 build.gradle.kts 에 다음 라이브러리
 ```
 dependencies {
 	implementation("org.codehaus.janino:janino:3.1.12")
-}
-```
-
-아래와 같은 경우 예시다.
-
-```kotlin
-@RestControllerAdvice
-class HelloExceptionHandler {
-    private val log = LoggerFactory.getLogger(HelloExceptionHandler::class.java)
-    @ExceptionHandler(RuntimeException::class)
-    fun handleException(e: RuntimeException): String {
-        val notifyAdmin: Marker = MarkerFactory.getMarker("NOTIFY_ADMIN")
-        val transactionAdmin: Marker = MarkerFactory.getMarker("TRANSACTION_ADMIN")
-        log.warn(notifyAdmin, "An exception occurred {}", e.message)
-        log.warn(transactionAdmin, "An exception occurred {}", e.message)
-        return "Error: ${e.message}"
-    }
 }
 ```
 
@@ -200,10 +175,9 @@ mysql> show tables;
         </connectionSource>
     </appender>
 </configuration>
-
 ```
 
-데이터베이스 드라이버가 필요해서 다음처럼 커넥터가 필요하다.
+데이터베이스 드라이버가 필요하니 라이브러리를 추가해야 한다.
 
 ```kotlin
 dependencies {
@@ -274,7 +248,8 @@ OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한
 | bufferSize	    | FileSize | immediateFlush 옵션이 false 로 설정된 경우 출력 버퍼 크기 설정한다. 기본 값은 8KB이다. 아무리 부담스러운 작업이어도 256KB 충분하다. |
 | prudent        | boolean  | 한 파일을 여러 FileAppender 가 사용하는 경우 해당 파일에 신중하게 작성할지 결정한다.                                    |
 
-> FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
+
+FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
 
 No buffer
 
@@ -287,7 +262,7 @@ With buffer
 > prudent 모드는 배타적 잠금을 활용해 직렬화하며 대략 로그 작성 비용이 3배 증가한다. NFS(네트워크 파일 시스템)에서는 더 많은 비용이 발생한다. 잠금 편향이 발생하고 기아 현상이 발생한다.
 > prudent 모드는 네트워크 속도와 OS 구현 세부 정보에 성능이 좌우하는데 [FileLockSimulator](https://gist.github.com/ceki/2794241) 로 시뮬레이션 가능하다. 
 
-> 팁 : 배치 애플리케이션을 개발하거나 단기 애플리케이션인 경우 시작마다 새 로그 파일을 만드는게 좋다. 파일에 실행한 날짜를 추가하면 된다. (참고 자료 : [Uniquely named files](https://logback.qos.ch/manual/appenders.html#uniquelyNamed))
+배치 애플리케이션을 개발하거나 단기 애플리케이션인 경우 시작마다 새 로그 파일을 만드는게 좋다. 파일에 실행한 날짜를 추가하면 된다. (참고 자료 : [Uniquely named files](https://logback.qos.ch/manual/appenders.html#uniquelyNamed))
 
 ```xml
 <configuration>
