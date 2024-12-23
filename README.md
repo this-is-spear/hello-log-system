@@ -79,14 +79,10 @@ logback-spring.xml 파일에는 OnMarkerEvaluator 에 마커를 등록한다.
 
 <img width="1300" alt="스크린샷 2024-12-23 오후 1 27 43" src="https://github.com/user-attachments/assets/cc511049-6e64-471f-a550-c28eca14a005" />
 
-근처 로그를 수집해서 전달한다.
+느꼈던 점은 mail 보내기전 위치가 존재하고 그 이후 로그를 전송한다는 점이다. 
+누군가 로그 전송한 인덱스를 저장하고 있고 이후 로그를 차례대로 출력한다.
 
 <img width="1300" alt="스크린샷 2024-12-23 오후 1 19 46" src="https://github.com/user-attachments/assets/9ea189a9-248f-4664-a1be-5cb044119ffc" />
-
-DEBUG 수준부터 수집한다면 경우 다음처럼 출력한다.
-
-<img width="1300" alt="스크린샷 2024-12-23 오후 1 26 44" src="https://github.com/user-attachments/assets/7d80c864-f114-4174-bd1c-68c87c44f771" />
-
 
 JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하면 전송한다.
 
@@ -147,13 +143,6 @@ class HelloExceptionHandler {
     }
 }
 ```
-
-NOTIFY_ADMIN, TRANSACTION_ADMIN 마커에 의해 두 번 메일 전송이 올 줄 알았지만 한 번만 전송됐다. NOTIFY_ADMIN 에 의해 메일이 전송된다.
-
-<img width="1300" alt="스크린샷 2024-12-23 오후 2 21 08" src="https://github.com/user-attachments/assets/126cef44-4f4b-4148-87a3-3b35c95a426d" />
-
-느꼈던 점은 mail 보내기전 위치가 존재하고 그 이후 로그를 전송한다는 점이다. 
-누군가 로그 전송한 인덱스를 저장하고 있고 이후 로그를 차례대로 출력한다.
 
 ### FileAppender
 
