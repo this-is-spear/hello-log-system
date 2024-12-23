@@ -19,10 +19,10 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 어펜더 구조 정리
 - [ ] 커스텀한 어펜더
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
-- [ ] 사용해볼법한 어펜더
+- [X] 사용해볼법한 어펜더
 	- [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
 	- [X] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
-	- [ ] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
+	- [X] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
 - [ ] 원리가 궁금한 어펜더
 	- [ ] [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
 	- [ ] [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
@@ -143,6 +143,97 @@ SMTP Appender 는 버퍼 관리가 중요하다.
 
 [버퍼가 가득 찰까봐 걱정할 수 있는데 걱정하지 않아도 된다.](https://logback.qos.ch/manual/appenders.html#bufferManagement)
 버퍼를 넘는 순간 오래된 버퍼를 삭제한다. 또한 지난 30분 간 업데이트 되지 않은 버퍼도 자동으로 삭제한다.
+
+### DBAppender
+
+DBAppender 는 logback-classic 에서 제공하지 않기 때문에 직접 추가해야 한다. 라이브러리 버전은 1.2.11.1 하나가 전부다.
+
+```
+dependencies {
+	// https://mvnrepository.com/artifact/ch.qos.logback.db/logback-classic-db
+	implementation("ch.qos.logback.db:logback-classic-db:1.2.11.1")
+}
+```
+
+초기화 스크립트도 직접 실행하면 된다. logback-classic-db-1.2.11.1 패키지에서 `ch/qos/logback/classic/db/script/mysql.sql` 파일을 찾자.
+데이터를 추가하면 다음처럼 테이블이 생성된다.
+
+```
+mysql> show tables;
++-------------------------+
+| Tables_in_log           |
++-------------------------+
+| logging_event           |
+| logging_event_exception |
+| logging_event_property  |
++-------------------------+
+```
+
+다음처럼 DBAppender 설정하면 된다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+            <driverClass>com.mysql.jdbc.Driver</driverClass>
+            <url>jdbc:mysql://localhost:3306/log</url>
+            <user>root</user>
+            <password>root</password>
+        </connectionSource>
+    </appender>
+</configuration>
+
+```
+
+데이터베이스 드라이버가 필요해서 다음처럼 커넥터가 필요하다.
+
+```kotlin
+dependencies {
+	runtimeOnly("com.mysql:mysql-connector-j")
+}
+```
+
+logging_event 에 포함되는 데이터와 예시는 다음과 같다.
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940085480 | Saying hello | tis.hello\_log\_system.HelloController | INFO | http-nio-8080-exec-1 | 1 | null | null | null | null | HelloController.kt | tis.hello\_log\_system.HelloController | hello | 13 | 16 |
+
+logging_event_exception 에 포함되는 데이터와 예시는 다음과 같다.
+
+| event\_id | i | trace\_line |
+| :--- | :--- | :--- |
+| 45 | 0 | java.lang.RuntimeException: An error occurred |
+| 45 | 1 | at tis.hello\_log\_system.HelloController.error\(HelloController.kt:20\) |
+| 45 | 2 | at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke\(DirectMethodHandleAccessor.java:103\) |
+| 45 | 3 | at java.base/java.lang.reflect.Method.invoke\(Method.java:580\) |
+| 45 | 4 | at kotlin.reflect.jvm.internal.calls.CallerImpl$Method.callMethod\(CallerImpl.kt:97\) |
+| 45 | 5 | at kotlin.reflect.jvm.internal.calls.CallerImpl$Method$Instance.call\(CallerImpl.kt:113\) |
+| 45 | 6 | at kotlin.reflect.jvm.internal.KCallableImpl.callDefaultMethod$kotlin\_reflection\(KCallableImpl.kt:207\) |
+| 45 | 7 | at kotlin.reflect.jvm.internal.KCallableImpl.callBy\(KCallableImpl.kt:112\) |
+
+event_id 에 맞게 root log 를 찾도록 설계됐다. 
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940238748 | Servlet.service\(\) for servlet \[dispatcherServlet\] in context with path \[\] threw exception \[Request processing failed: java.lang.RuntimeException: An error occurred\] with root cause | org.apache.catalina.core.ContainerBase.\[Tomcat\].\[localhost\].\[/\].\[dispatcherServlet\] | ERROR | http-nio-8080-exec-1 | 2 | null | null | null | null | DirectJDKLog.java | org.apache.juli.logging.DirectJDKLog | log | 175 | 45 |
+
+logging_event_property 에는 다음처럼 MDC에 저장된 정보가 포함된다.
+
+| event\_id | mapped\_key | mapped\_value |
+| :--- | :--- | :--- |
+| 41 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 42 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 43 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 44 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+
+해당 이벤트 식별자를 이용해 데이터를 조회하면 된다.
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940238734 | An exception occurred An error occurred | tis.hello\_log\_system.HelloExceptionHandler | WARN | http-nio-8080-exec-1 | 1 | An error occurred | null | null | null | HelloExceptionHandler.kt | tis.hello\_log\_system.HelloExceptionHandler | handleException | 18 | 44 |
+
 
 ### FileAppender
 
