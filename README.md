@@ -33,6 +33,13 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 
 ### SMTP Appender - Marker based triggering
 
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
+
 ERROR 레벨 중 일부 이벤트 만 메일을 받을 수 있도록 마커 설정이 가능하다.
 
 ```kotlin
@@ -144,7 +151,17 @@ SMTP Appender 는 버퍼 관리가 중요하다.
 [버퍼가 가득 찰까봐 걱정할 수 있는데 걱정하지 않아도 된다.](https://logback.qos.ch/manual/appenders.html#bufferManagement)
 버퍼를 넘는 순간 오래된 버퍼를 삭제한다. 또한 지난 30분 간 업데이트 되지 않은 버퍼도 자동으로 삭제한다.
 
+</details>
+
 ### DBAppender
+
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 DBAppender 는 logback-classic 에서 제공하지 않기 때문에 직접 추가해야 한다. 라이브러리 버전은 1.2.11.1 하나가 전부다.
 
@@ -234,8 +251,18 @@ logging_event_property 에는 다음처럼 MDC에 저장된 정보가 포함된�
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 1734940238734 | An exception occurred An error occurred | tis.hello\_log\_system.HelloExceptionHandler | WARN | http-nio-8080-exec-1 | 1 | An error occurred | null | null | null | HelloExceptionHandler.kt | tis.hello\_log\_system.HelloExceptionHandler | handleException | 18 | 44 |
 
+</details>
+
+
 
 ### FileAppender
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
 
@@ -279,7 +306,7 @@ With buffer
  </configuration>
 ```
 
-### RollingFileAppender
+#### RollingFileAppender
 
 RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅 이벤트를 적재한다.
 롤오버하는 방식은 두 가지 중 하나로 설정한다.
@@ -328,6 +355,9 @@ RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅
 | fileNamePattern	 | String	   | TimeBasedRollingPolicy 정책과 유사하지만 형식에 `%i` 가 꼭 포함되어야 한다. 크기가 넘어가면 해당 위치에 숫자가 증가한다. |
 | maxFileSize	     | FileSize	 | 설정된 크기가 넘어가면 0부터 시작하여 증가하는 인덱스로 보관된다. `%i` 형식에 해당 인덱스가 설정된다.                      |
 
+</details>
+
+
 ## 3. Setting up log structure with logstash
 
 - 3.4.0 버전 이상은 logging.structured.{appender type}.* 로 설정 가능하다. (참고 자료 : [spring boot logging features.logging.structured](https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured))
@@ -338,6 +368,13 @@ RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅
 
 
 ### 3.4.0 버전 이상
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 application.yml 파일에서 정의 가능하며 [기본 구성](https://github.com/spring-projects/spring-boot/blob/v3.4.1/spring-boot-project/spring-boot/src/main/resources/org/springframework/boot/logging/logback/structured-file-appender.xml)은 다음과 같다.
 
@@ -416,7 +453,16 @@ append name 이 FILE 을 레퍼런스로 사용하면 된다.
 
 > `/org/springframework/boot/logging/logback/structured-file-appender.xml` 파일을 참고해야 한다.
 
+</details>
+
 ### 3.4.0 버전 이하
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 logback 설정을 직접 변경해야 한다. 번거롭지만 커스터마이징이 쉽다.
 build.gradle 파일에 logstash-logback-encoder 라이브러리를 추가한다.
@@ -477,6 +523,8 @@ dependencies {
 1. 루트 원인을 먼저 표시할지 판단 ([Root cause first](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#root-cause-first))
 2. 스택 트레이스 형식 설정 ([Exclude frames per regex](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#exclude-frames-per-regex), [Omit common frames](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#omit-common-frames), [Maximum depth per throwable](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#maximum-depth-per-throwable))
 3. 스택 트레이스 최대 크기 설정 ([Maximum trace size bytes](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#maximum-trace-size-bytes))
+
+</details>
 
 
 
