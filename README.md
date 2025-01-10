@@ -17,20 +17,225 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 ### Appender
 
 - [ ] 어펜더 구조 정리
-- [ ] 커스텀한 어펜더
-	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 - [X] 사용해볼법한 어펜더
-    - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
+	- [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
 	- [X] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
 	- [X] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
+- [ ] 성능 확인하고 싶은 어펜더
+	- [ ] [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
 - [ ] 원리가 궁금한 어펜더
 	- [ ] [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
-	- [ ] [File Appender - prudent](https://logback.qos.ch/manual/appenders.html#prudent)
-    - [X] [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+	- [ ] [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
+- [ ] 커스텀한 어펜더
+	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 - [ ] 커스텀한 어펜더 - s3 어펜더 만들어보자.
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 
+### SMTP Appender - Marker based triggering`
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
+
+ERROR 레벨 중 일부 이벤트 만 메일을 받을 수 있도록 마커 설정이 가능하다.
+
+```kotlin
+@RestControllerAdvice
+class HelloExceptionHandler {
+    private val log = LoggerFactory.getLogger(HelloExceptionHandler::class.java)
+    @ExceptionHandler(RuntimeException::class)
+    fun handleException(e: RuntimeException): String {
+        val notifyAdmin = MarkerFactory.getMarker("NOTIFY_ADMIN")
+        log.warn(notifyAdmin, "An exception occurred {}", e.message)
+        return "Error: ${e.message}"
+    }
+}
+```
+
+logback-spring.xml 파일에는 OnMarkerEvaluator 에 마커를 등록한다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>NOTIFY_ADMIN</marker>
+        </evaluator>
+        <smtpHost>smtp-relay.gmail.com</smtpHost>
+        <from>geonc123@estsoft.com</from>
+        <to>geonc123@estsoft.com</to>
+        <subject>TESTING: %logger{20} - %m</subject>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="EMAIL" />
+    </root>
+</configuration>
+
+```
+
+발생한 예외 수집한 모습이다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 27 43" src="https://github.com/user-attachments/assets/cc511049-6e64-471f-a550-c28eca14a005" />
+
+JaninoEventEvaluator 기반 트리거도 가능하다. expression 을 등록하면 전송한다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <evaluator class="ch.qos.logback.classic.boolex.OnMarkerEvaluator">
+            <marker>NOTIFY_ADMIN</marker>
+            <expression>markerList.contains("NOTIFY_ADMIN")||markerList.contains("TRANSACTION_ADMIN")</expression>
+        </evaluator>
+        <smtpHost>smtp-relay.gmail.com</smtpHost>
+        <from>geonc123@estsoft.com</from>
+        <to>geonc123@estsoft.com</to>
+<!--        <to>ANOTHER_EMAIL_DESTINATION</to> &lt;!&ndash; additional destinations are possible &ndash;&gt;-->
+        <subject>TESTING: %logger{20} - %m</subject>
+        <layout class="ch.qos.logback.classic.html.HTMLLayout"/>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="EMAIL" />
+    </root>
+</configuration>
+```
+
+JaninoEventEvaluator 사용하려면 build.gradle.kts 에 다음 라이브러리를 추가해야 한다.
+
+> [spring boot coordinates](https://docs.spring.io/spring-boot/appendix/dependency-versions/coordinates.html) 에서 [org.codehaus.janino:commons-compiler:3.1.12](https://janino-compiler.github.io/janino/) 라이브러리가 포함돼야 하는데 포함되지 않았나보다.
+> 어떤 이유에선지 라이브러리를 직접 설정해야 한다.
+
+```
+dependencies {
+	implementation("org.codehaus.janino:janino:3.1.12")
+}
+```
+
+SMTP Appender 는 버퍼 관리가 중요하다.
+버퍼에 담긴 데이터가 전부 전송되기 때문이다.
+다음처럼 버퍼에 저장된 로그를 차례대로 출력한다.
+
+<img width="1300" alt="스크린샷 2024-12-23 오후 1 19 46" src="https://github.com/user-attachments/assets/9ea189a9-248f-4664-a1be-5cb044119ffc" />
+
+[버퍼가 가득 찰까봐 걱정할 수 있는데 걱정하지 않아도 된다.](https://logback.qos.ch/manual/appenders.html#bufferManagement)
+버퍼를 넘는 순간 오래된 버퍼를 삭제한다. 또한 지난 30분 간 업데이트 되지 않은 버퍼도 자동으로 삭제한다.
+
+</details>
+
+### DBAppender
+
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
+
+DBAppender 는 logback-classic 에서 제공하지 않기 때문에 직접 추가해야 한다. 라이브러리 버전은 1.2.11.1 하나가 전부다.
+
+```
+dependencies {
+	// https://mvnrepository.com/artifact/ch.qos.logback.db/logback-classic-db
+	implementation("ch.qos.logback.db:logback-classic-db:1.2.11.1")
+}
+```
+
+초기화 스크립트도 직접 실행하면 된다. logback-classic-db-1.2.11.1 패키지에서 `ch/qos/logback/classic/db/script/mysql.sql` 파일을 찾자.
+데이터를 추가하면 다음처럼 테이블이 생성된다.
+
+```
+mysql> show tables;
++-------------------------+
+| Tables_in_log           |
++-------------------------+
+| logging_event           |
+| logging_event_exception |
+| logging_event_property  |
++-------------------------+
+```
+
+다음처럼 DBAppender 설정하면 된다.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="DB" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DriverManagerConnectionSource">
+            <driverClass>com.mysql.jdbc.Driver</driverClass>
+            <url>jdbc:mysql://localhost:3306/log</url>
+            <user>root</user>
+            <password>root</password>
+        </connectionSource>
+    </appender>
+</configuration>
+```
+
+데이터베이스 드라이버가 필요하니 라이브러리를 추가해야 한다.
+
+```kotlin
+dependencies {
+	runtimeOnly("com.mysql:mysql-connector-j")
+}
+```
+
+logging_event 에 포함되는 데이터와 예시는 다음과 같다.
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940085480 | Saying hello | tis.hello\_log\_system.HelloController | INFO | http-nio-8080-exec-1 | 1 | null | null | null | null | HelloController.kt | tis.hello\_log\_system.HelloController | hello | 13 | 16 |
+
+logging_event_exception 에 포함되는 데이터와 예시는 다음과 같다.
+
+| event\_id | i | trace\_line |
+| :--- | :--- | :--- |
+| 45 | 0 | java.lang.RuntimeException: An error occurred |
+| 45 | 1 | at tis.hello\_log\_system.HelloController.error\(HelloController.kt:20\) |
+| 45 | 2 | at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke\(DirectMethodHandleAccessor.java:103\) |
+| 45 | 3 | at java.base/java.lang.reflect.Method.invoke\(Method.java:580\) |
+| 45 | 4 | at kotlin.reflect.jvm.internal.calls.CallerImpl$Method.callMethod\(CallerImpl.kt:97\) |
+| 45 | 5 | at kotlin.reflect.jvm.internal.calls.CallerImpl$Method$Instance.call\(CallerImpl.kt:113\) |
+| 45 | 6 | at kotlin.reflect.jvm.internal.KCallableImpl.callDefaultMethod$kotlin\_reflection\(KCallableImpl.kt:207\) |
+| 45 | 7 | at kotlin.reflect.jvm.internal.KCallableImpl.callBy\(KCallableImpl.kt:112\) |
+
+event_id 에 맞게 root log 를 찾도록 설계됐다. 
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940238748 | Servlet.service\(\) for servlet \[dispatcherServlet\] in context with path \[\] threw exception \[Request processing failed: java.lang.RuntimeException: An error occurred\] with root cause | org.apache.catalina.core.ContainerBase.\[Tomcat\].\[localhost\].\[/\].\[dispatcherServlet\] | ERROR | http-nio-8080-exec-1 | 2 | null | null | null | null | DirectJDKLog.java | org.apache.juli.logging.DirectJDKLog | log | 175 | 45 |
+
+logging_event_property 에는 다음처럼 MDC에 저장된 정보가 포함된다.
+
+| event\_id | mapped\_key | mapped\_value |
+| :--- | :--- | :--- |
+| 41 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 42 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 43 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+| 44 | transaction.id | ca533ad5-ba07-44a5-843b-823ef82d56b6 |
+
+해당 이벤트 식별자를 이용해 데이터를 조회하면 된다.
+
+| timestmp | formatted\_message | logger\_name | level\_string | thread\_name | reference\_flag | arg0 | arg1 | arg2 | arg3 | caller\_filename | caller\_class | caller\_method | caller\_line | event\_id |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1734940238734 | An exception occurred An error occurred | tis.hello\_log\_system.HelloExceptionHandler | WARN | http-nio-8080-exec-1 | 1 | An error occurred | null | null | null | HelloExceptionHandler.kt | tis.hello\_log\_system.HelloExceptionHandler | handleException | 18 | 44 |
+
+</details>
+
+
+
 ### FileAppender
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한다. 아래 옵션으로 어떻게 저장할지 결정된다.
 
@@ -42,7 +247,8 @@ OutputStreamAppender 하위 클래스로 로깅 이벤트를 파일에 추가한
 | bufferSize	    | FileSize | immediateFlush 옵션이 false 로 설정된 경우 출력 버퍼 크기 설정한다. 기본 값은 8KB이다. 아무리 부담스러운 작업이어도 256KB 충분하다. |
 | prudent        | boolean  | 한 파일을 여러 FileAppender 가 사용하는 경우 해당 파일에 신중하게 작성할지 결정한다.                                    |
 
-> FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
+
+FileAppender 는 기본 출력 스트림으로 바로 flush 되므로 로깅 이벤트가 손실되지 않는다. 그러나 로깅 이벤트 처리량을 늘리기 위해 immediateFlush 설정 변경으로 버퍼를 활용 할 수 있다.
 
 No buffer
 
@@ -55,7 +261,7 @@ With buffer
 > prudent 모드는 배타적 잠금을 활용해 직렬화하며 대략 로그 작성 비용이 3배 증가한다. NFS(네트워크 파일 시스템)에서는 더 많은 비용이 발생한다. 잠금 편향이 발생하고 기아 현상이 발생한다.
 > prudent 모드는 네트워크 속도와 OS 구현 세부 정보에 성능이 좌우하는데 [FileLockSimulator](https://gist.github.com/ceki/2794241) 로 시뮬레이션 가능하다. 
 
-> 팁 : 배치 애플리케이션을 개발하거나 단기 애플리케이션인 경우 시작마다 새 로그 파일을 만드는게 좋다. 파일에 실행한 날짜를 추가하면 된다. (참고 자료 : [Uniquely named files](https://logback.qos.ch/manual/appenders.html#uniquelyNamed))
+배치 애플리케이션을 개발하거나 단기 애플리케이션인 경우 시작마다 새 로그 파일을 만드는게 좋다. 파일에 실행한 날짜를 추가하면 된다. (참고 자료 : [Uniquely named files](https://logback.qos.ch/manual/appenders.html#uniquelyNamed))
 
 ```xml
 <configuration>
@@ -74,7 +280,7 @@ With buffer
  </configuration>
 ```
 
-### RollingFileAppender
+#### RollingFileAppender
 
 RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅 이벤트를 적재한다.
 롤오버하는 방식은 두 가지 중 하나로 설정한다.
@@ -123,6 +329,9 @@ RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅
 | fileNamePattern	 | String	   | TimeBasedRollingPolicy 정책과 유사하지만 형식에 `%i` 가 꼭 포함되어야 한다. 크기가 넘어가면 해당 위치에 숫자가 증가한다. |
 | maxFileSize	     | FileSize	 | 설정된 크기가 넘어가면 0부터 시작하여 증가하는 인덱스로 보관된다. `%i` 형식에 해당 인덱스가 설정된다.                      |
 
+</details>
+
+
 ## 3. Setting up log structure with logstash
 
 - 3.4.0 버전 이상은 logging.structured.{appender type}.* 로 설정 가능하다. (참고 자료 : [spring boot logging features.logging.structured](https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured))
@@ -133,6 +342,13 @@ RollingFileAppender 는 특정 조건이 충족되면 파일을 생성해 로깅
 
 
 ### 3.4.0 버전 이상
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 application.yml 파일에서 정의 가능하며 [기본 구성](https://github.com/spring-projects/spring-boot/blob/v3.4.1/spring-boot-project/spring-boot/src/main/resources/org/springframework/boot/logging/logback/structured-file-appender.xml)은 다음과 같다.
 
@@ -211,7 +427,16 @@ append name 이 FILE 을 레퍼런스로 사용하면 된다.
 
 > `/org/springframework/boot/logging/logback/structured-file-appender.xml` 파일을 참고해야 한다.
 
+</details>
+
 ### 3.4.0 버전 이하
+
+
+<details>
+<summary>접기/펼치기</summary>
+
+<!-- summary 아래 한칸 공백 두어야함 -->
+
 
 logback 설정을 직접 변경해야 한다. 번거롭지만 커스터마이징이 쉽다.
 build.gradle 파일에 logstash-logback-encoder 라이브러리를 추가한다.
@@ -272,6 +497,8 @@ dependencies {
 1. 루트 원인을 먼저 표시할지 판단 ([Root cause first](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#root-cause-first))
 2. 스택 트레이스 형식 설정 ([Exclude frames per regex](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#exclude-frames-per-regex), [Omit common frames](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#omit-common-frames), [Maximum depth per throwable](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#maximum-depth-per-throwable))
 3. 스택 트레이스 최대 크기 설정 ([Maximum trace size bytes](https://github.com/logfellow/logstash-logback-encoder?tab=readme-ov-file#maximum-trace-size-bytes))
+
+</details>
 
 
 
