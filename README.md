@@ -19,15 +19,14 @@ spring 에서는 logback-spring.xml 파일 설정 방식을 권장한다.
 - [ ] 어펜더 구조 정리
 - [ ] 커스텀한 어펜더
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
-- [ ] 사용해볼법한 어펜더
+- [X] 사용해볼법한 어펜더
     - [X] [File Appender](https://logback.qos.ch/manual/appenders.html#FileAppender)
-	- [ ] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
-	- [ ] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
+	- [X] [SMTP Appender](https://logback.qos.ch/manual/appenders.html#SMTPAppender)
+	- [X] [DB Appender](https://logback.qos.ch/manual/appenders.html#DBAppender)
 - [ ] 원리가 궁금한 어펜더
 	- [ ] [Sifting Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
-	- [ ] [File Appender - prudenr](https://logback.qos.ch/manual/appenders.html#prudent)
-- [ ] 성능 확인하고 싶은 어펜더
-	- [ ] [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
+	- [ ] [File Appender - prudent](https://logback.qos.ch/manual/appenders.html#prudent)
+    - [X] [Async Appender](https://logback.qos.ch/manual/appenders.html#SiftingAppender)
 - [ ] 커스텀한 어펜더 - s3 어펜더 만들어보자.
 	- [ ] [Create Custom Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender)
 

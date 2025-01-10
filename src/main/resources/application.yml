@@ -17,9 +17,10 @@ logging:
 #        node-name: localhost
   logback:
     rollingpolicy:
-      file-name-pattern: ./logs/${LOG_FILE}.%d{yyyy-MM-dd-HH-mm}.%i.log
+      file-name-pattern: ./logs/${LOG_FILE}.%d{yyyy-MM-dd-HH-mm-ss}.%i.log
       max-file-size: 10MB
       total-size-cap: 1GB
       max-history: 200
+      clean-history-on-start: false
   file:
     name: app.log
